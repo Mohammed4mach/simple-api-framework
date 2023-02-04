@@ -1,6 +1,0 @@
-{
-	"dbConnectionString": "mysql:host=localhost;dbname=clinic_manager;",
-	"dbUser": "devmoha",
-	"dbPassword": "devmoha"
-}
-
