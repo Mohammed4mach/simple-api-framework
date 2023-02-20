@@ -35,7 +35,8 @@ namespace MFunc
 
 			// Strip query string
 			$lastIndex       = count($arr) - 1;
-			$arr[$lastIndex] = preg_replace("/\?.*/", "", $arr[$lastIndex]);
+			if($lastIndex >= 0)
+				$arr[$lastIndex] = preg_replace("/\?.*/", "", $arr[$lastIndex]);
 		}
 
 		private static function respond_not_found()
@@ -151,7 +152,7 @@ namespace MFunc
 				? $target["__PATH__"]
 				: "/" . $target["__PATH__"];
 
-			require_once $_SERVER["DOCUMENT_ROOT"] . $path;
+			require_once __DIR__ . "/..$path";
 		}
 
 		public static function mapGET(string $route, string $path)

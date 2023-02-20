@@ -17,6 +17,6 @@ Router::mapPOST("/api/services",                        "/api/services/create.ph
 Router::mapDELETE("/api/services/:serviceId",           "/api/services/delete.php");
 Router::mapGET("/api/queue/:rowId",                     "/api/queue/read.php");
 Router::mapGET("/api/queue/",                           "/api/queue/readAll.php");
-Router::print_routes();
+/* Router::print_routes(); */
 Router::route();
 

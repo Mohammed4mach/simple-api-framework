@@ -5,7 +5,7 @@ namespace MFunc
 	use \PDO;
 	use \Exception;
 
-	require_once "{$_SERVER['DOCUMENT_ROOT']}/config/Configurations.php";
+	require_once __DIR__ . "/Configurations.php";
 
 	class Database
 	{

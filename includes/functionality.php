@@ -25,6 +25,13 @@ namespace MFunc
 		}
 
 
+		// Decode url parameter
+		public static function parseURIParam(string $param)
+		{
+			return str_replace("-", " ", $param);
+		}
+
+
 		// Print Array
 		public static function printArr(&$arr)
 		{
