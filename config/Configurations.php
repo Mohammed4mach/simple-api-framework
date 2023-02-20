@@ -4,6 +4,8 @@ namespace MFunc
 {
 	use \Exception;
 
+	define("PROJ_ROOT", __DIR__ . "/../");
+
 	$env_mode  = getenv("PHP_ENV");
 
 	$conf_path = __DIR__ . "/config.$env_mode.json";

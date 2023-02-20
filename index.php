@@ -22,7 +22,7 @@ $payload = [
 $jwt = new JWT();
 
 $jwt_str = $jwt->genToken($payload, $Configurations->authGenKey);
-/* echo $jwt_str; */
+echo $jwt_str;
 
 $tmp = explode(".", $jwt_str);
 $body = $tmp[1];
