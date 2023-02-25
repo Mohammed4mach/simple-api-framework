@@ -59,7 +59,8 @@ namespace MFunc
 		}
 
 		/**
-		 *	Execute sql query
+		 *	Execute sql query.
+		 *	Set `Database::$displayErrors` to true to display colored errors
 		 *	@param string $sql valid sql query
 		 *	@param array $paramsAssoc associative array, consists of parameter name as key and its value
 		 *	@return array|object|null object[s] or no return, depends on the query. May returns void
