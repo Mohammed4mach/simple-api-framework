@@ -64,6 +64,7 @@ namespace MFunc
 		 *	@param string $sql valid sql query
 		 *	@param array $paramsAssoc associative array, consists of parameter name as key and its value
 		 *	@return array|object|null object[s] or no return, depends on the query. May returns void
+		 *	@author Mohammed Abdulsalam
 		*/
 		public function executeSQL($sql, $paramsAssoc = null) : array|\stdClass|null
 		{

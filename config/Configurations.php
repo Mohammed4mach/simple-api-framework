@@ -38,5 +38,13 @@ namespace MFunc
 			$Configurations->authKeysExists = true;
 		}
 	}
+
+	// Unset temporary variables
+	unset($env_mode);
+	unset($conf_path);
+	unset($_keysFilesExist_);
+	unset($_keysPathsSet);
+	unset($_privateKey_);
+	unset($_publicKey_);
 }
 

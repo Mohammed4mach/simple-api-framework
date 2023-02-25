@@ -145,6 +145,7 @@ namespace MFunc
 		*   @param string $text Text contains markdown formats
 		*   
 		*   @return string|NULL
+		*	@author Mohammed Abdulsalam
 		*/
 		public static function processMarkdown(&$text): string|NULL
 		{

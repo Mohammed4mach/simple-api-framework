@@ -2,8 +2,11 @@
 
 namespace MFunc;
 
-include "includes/JWT/JWT.php";
-include "config/Configurations.php";
+require_once __DIR__ . "/config/Configurations.php";
+require_once PROJ_ROOT ."/includes/JWT/JWT.php";
+
+
+global $Configurations;
 
 $header = [
 	"alg" => "RS256",
@@ -34,5 +37,5 @@ $bodyEnc = JWT::base64url_encode($body2);
 $jwt_str2 = "{$tmp[0]}.$bodyEnc.{$tmp[2]}";
 
 $jwt = new JWT($jwt_str);
-var_dump($jwt->verify($Configurations->authVerKey));
+/* var_dump($jwt->verify($Configurations->authVerKey)); */
 

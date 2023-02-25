@@ -18,6 +18,7 @@ class HTTPResponse
 
 	/**
 	 * If input is not in the required format
+	 *	@author Mohammed Abdulsalam
 	*/
 	public static function clientBadRequest(string $message = null)
 	{
@@ -26,6 +27,7 @@ class HTTPResponse
 
 	/**
 	 * If the resource can not be found
+	 *	@author Mohammed Abdulsalam
 	*/
 	public static function clientNotFound(string $message = null)
 	{
@@ -34,6 +36,7 @@ class HTTPResponse
 
 	/**
 	 *	If Content-Type is not the desired one
+	 *	@author Mohammed Abdulsalam
 	 * */
 	public static function clientUnsupportedMediaType(string $message = null)
 	{
@@ -43,6 +46,7 @@ class HTTPResponse
 	/**
 	 *	If the response Content-Type can not be equals that of
 	 *  the required in Accept header in request
+	 *	@author Mohammed Abdulsalam
 	 * */
 	public static function clientNotAcceptable(string $message = null)
 	{
@@ -53,6 +57,7 @@ class HTTPResponse
 	 *	If the request success is not possible
 	 *	For example if the resource is not possible to be updated, or
 	 *	the resource cannot be created due to wrong input
+	 *	@author Mohammed Abdulsalam
 	 * */
 	public static function clientConflict(string $message = null)
 	{
@@ -60,7 +65,26 @@ class HTTPResponse
 	}
 
 	/**
+	 * If user needs authorization
+	 *	@author Mohammed Abdulsalam
+	 * */
+	public static function clientUnauthorized(string $message = null)
+	{
+		self::sendResponse(401, $message);
+	}
+
+	/**
+	 *	The user is identified but has no access
+	 *	@author Mohammed Abdulsalam
+	 * */
+	public static function clientForbidden(string $message = null)
+	{
+		self::sendResponse(403, $message);
+	}
+
+	/**
 	 *	If the request is success, and response has no body
+	 *	@author Mohammed Abdulsalam
 	 * */
 	public static function successNoContent(string $message = null)
 	{
@@ -69,6 +93,7 @@ class HTTPResponse
 
 	/**
 	 *	If OK
+	 *	@author Mohammed Abdulsalam
 	 * */
 	public static function successOK(string $message = null)
 	{
@@ -77,6 +102,7 @@ class HTTPResponse
 
 	/**
 	 *	If the requested resource  is created
+	 *	@author Mohammed Abdulsalam
 	 * */
 	public static function successCreated(string $message = null)
 	{
@@ -85,6 +111,7 @@ class HTTPResponse
 
 	/**
 	 *	For internal errors
+	 *	@author Mohammed Abdulsalam
 	 * */
 	public static function serverInternalError(string $message = null)
 	{

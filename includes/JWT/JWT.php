@@ -8,6 +8,7 @@ namespace MFunc
 	 * JWT utilities
 	 * This class depend on openssl extension
 	 * Currently, RS256 only are supported
+	 *	@author Mohammed Abdulsalam
 	 */
 	class JWT
 	{
@@ -22,6 +23,7 @@ namespace MFunc
 		 *
 		 * Validate parts of the jwt in the object
 		 *
+		 * @author Mohammed Abdulsalam
 		 */
 		private function validParts() : bool
 		{
@@ -50,6 +52,7 @@ namespace MFunc
 		 * JWT utilities
 		 * This class depend on openssl extension
 		 * Currently, RS256 only are supported
+		 * @author Mohammed Abdulsalam
 		 * */
 		public function __construct(string $jwt = null)
 		{
@@ -80,6 +83,7 @@ namespace MFunc
 		 *
 		 * @param string $publicKey public key in format supported by openssl extension
 		 * @return bool true if not manipulated
+		 * @author Mohammed Abdulsalam
 		 * */
 		public function verify(string $publicKey) : bool
 		{
@@ -99,6 +103,7 @@ namespace MFunc
 		 * @param array $payload JWT body
 		 * @param string $privateKey private key in format supported by openssl extension
 		 * @return string The generated JWT
+		 * @author Mohammed Abdulsalam
 		 * */
 		public function genToken(array $payload, string $privateKey) : string
 		{

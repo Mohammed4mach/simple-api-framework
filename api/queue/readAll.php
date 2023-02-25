@@ -1,4 +1,4 @@
 <?php
 
-echo "api/queue/read.php";
+echo "api/queue/readAll.php";
 

@@ -84,8 +84,10 @@ class Router
 	 *  @param string $route End-point to build its route
 	 *  @param string $path File to map the end-point to it
 	 *  @param array &$routes Array that route tree built in
+	 *  @param callable $callback A callback function that is called before including the file
+	 *  @param mixed $args Arguments to supply to the callback
 	 * */
-	private static function map_all(string $route, string $path, array &$routes)
+	private static function map_all(string $route, string $path, array &$routes, ?callable $callback = null, ...$args)
 	{
 		$paramNameQue = new \SplQueue();
 		$routeFrags   = explode("/", $route);
@@ -122,13 +124,29 @@ class Router
 			? []
 			: null;
 
+		// Set callback function
+		$tempArr["__CALLBACK__"] = null;
+		$tempArr["__CALLBACK_ARGS__"] = null;
+
+		$callbackIsValid = !is_null($callback);
+
+		if($callbackIsValid)
+		{
+			if(!is_callable($callback))
+				throw new \Exception("Callback provided is not callable");
+
+			// Otherwise
+			$tempArr["__CALLBACK__"] = $callback;
+			$tempArr["__CALLBACK_ARGS__"] = $args;
+		}
+
 		// Extract URI params names
 		foreach($paramNameQue as $paramName)
 			array_push($tempArr["__PARAMS_NAME__"], $paramName);
 	}
 
 	/**
-	 * Route request to the file path mapped to the end-point in the request
+	 * Route request to the file path mapped to the end-point in the request and call associated callback if exists
 	 * The path depends on request method and URI. This function is used after mapping
 	 * all end-points to their paths using, for example, `Router::mapGET("/your/:id/end-point", "/path/to/logic.php")`
 	 *
@@ -176,6 +194,7 @@ class Router
 		$_Request_Body = json_decode(
 			file_get_contents("php://input")
 		);
+		$_Request_Headers = $requestHeaders;
 
 		// Extract URI params
 		$paramNameCount = !is_null($target["__PARAMS_NAME__"])
@@ -198,10 +217,25 @@ class Router
 
 		$_Request_Query_String = (object) $_Request_Query_String;
 
+		// Call the callback if exists
+		$args = $target["__CALLBACK_ARGS__"];
+
+		if(!is_null($target["__CALLBACK__"]))
+			$target["__CALLBACK__"](...$args);
+
 		// Call the controller
 		$path = $target["__PATH__"][0] == "/"
 			? $target["__PATH__"]
 			: "/" . $target["__PATH__"];
+
+		// Unset temporary variables
+		unset($paramQue);
+		unset($uriFrags);
+		unset($reqMethod);
+		unset($requestHeaders);
+		unset($switchHeader);
+		unset($target);
+		unset($args);
 
 		require_once __DIR__ . "/..$path";
 	}
@@ -213,10 +247,12 @@ class Router
 	 *
 	 * @param string $route The end-point
 	 * @param string $path Path to the file
+	 * @param callable $callback A callback function that is called before including the file
+	 * @param mixed $args Arguments to supply to the callback
 	 * */
-	public static function mapGET(string $route, string $path)
+	public static function mapGET(string $route, string $path, ?callable $callback = null, ...$args)
 	{
-		self::map_all($route, $path, self::$routes["GET"]);
+		self::map_all($route, $path, self::$routes["GET"], $callback, ...$args);
 	}
 
 	/**
@@ -226,10 +262,12 @@ class Router
 	 *
 	 * @param string $route The end-point
 	 * @param string $path Path to the file
+	 * @param callable $callback A callback function that is called before including the file
+	 * @param mixed $args Arguments to supply to the callback
 	 * */
-	public static function mapPOST(string $route, string $path)
+	public static function mapPOST(string $route, string $path, ?callable $callback = null, ...$args)
 	{
-		self::map_all($route, $path, self::$routes["POST"]);
+		self::map_all($route, $path, self::$routes["POST"], $callback, ...$args);
 	}
 
 
@@ -240,10 +278,12 @@ class Router
 	 *
 	 * @param string $route The end-point
 	 * @param string $path Path to the file
+	 * @param callable $callback A callback function that is called before including the file
+	 * @param mixed $args Arguments to supply to the callback
 	 * */
-	public static function mapPUT(string $route, string $path)
+	public static function mapPUT(string $route, string $path, ?callable $callback = null, ...$args)
 	{
-		self::map_all($route, $path, self::$routes["PUT"]);
+		self::map_all($route, $path, self::$routes["PUT"], $callback, ...$args);
 	}
 
 	/**
@@ -253,10 +293,12 @@ class Router
 	 *
 	 * @param string $route The end-point
 	 * @param string $path Path to the file
+	 * @param callable $callback A callback function that is called before including the file
+	 * @param mixed $args Arguments to supply to the callback
 	 * */
-	public static function mapPATCH(string $route, string $path)
+	public static function mapPATCH(string $route, string $path, ?callable $callback = null, ...$args)
 	{
-		self::map_all($route, $path, self::$routes["PATCH"]);
+		self::map_all($route, $path, self::$routes["PATCH"], $callback, ...$args);
 	}
 
 	/**
@@ -266,17 +308,19 @@ class Router
 	 *
 	 * @param string $route The end-point
 	 * @param string $path Path to the file
+	 * @param callable $callback A callback function that is called before including the file
+	 * @param mixed $args Arguments to supply to the callback
 	 * */
-	public static function mapDELETE(string $route, string $path)
+	public static function mapDELETE(string $route, string $path, ?callable $callback = null, ...$args)
 	{
-		self::map_all($route, $path, self::$routes["DELETE"]);
+		self::map_all($route, $path, self::$routes["DELETE"], $callback, ...$args);
 	}
 
-	/* public static function print_routes() */
-	/* { */
-	/* 	echo "<pre>"; */
-	/* 	print_r(self::$routes); */
-	/* 	echo "</pre>"; */
-	/* } */
+	public static function print_routes()
+	{
+		echo "<pre>";
+		print_r(self::$routes);
+		echo "</pre>";
+	}
 }
 
