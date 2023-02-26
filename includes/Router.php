@@ -89,6 +89,10 @@ class Router
 	 * */
 	private static function map_all(string $route, string $path, array &$routes, ?callable $callback = null, ...$args)
 	{
+		// Check if file of $path exists
+		if(!file_exists(__DIR__ . "/../$path"))
+			throw new \Exception("File at $path not found");
+
 		$paramNameQue = new \SplQueue();
 		$routeFrags   = explode("/", $route);
 
