@@ -5,7 +5,7 @@ namespace MFunc;
 class HTTPResponse
 {
 
-	private static function sendResponse(int $statusCode, string $message = null)
+	public static function sendResponse(int $statusCode, string $message = null)
 	{
 		$body = !is_null($message)
 			? "{ \"message\": \"$message\" }"

@@ -13,6 +13,7 @@ namespace MFunc
 		private $user;
 		private $password;
 		private $dbObject;
+		private $lastRowCount;
 
 		private static $instance;
 		public static $displayErrors = false;
@@ -84,6 +85,9 @@ namespace MFunc
 				$result = !count($result)
 					? null
 					: $result;
+
+				// Store rows affected count
+				$this->lastRowCount = $stmt->rowCount();
 			}
 			catch(Exception $err)
 			{
@@ -99,6 +103,16 @@ namespace MFunc
 			}
 
 			return $result;
+		}
+
+		/**
+		 * Get count of rows affected by last transaction
+		 *
+		 * @return int | null Number of rows or null if no pre-transaction
+		 *  */
+		public function getLastRowCount() : int | null
+		{
+			return $this->lastRowCount;
 		}
 	}
 }
