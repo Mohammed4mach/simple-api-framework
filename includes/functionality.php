@@ -7,9 +7,12 @@ namespace MFunc
 	class Func
 	{
 		// Encapsulate input sanitize functions in one
-		public static function sanInput($input) {
+		public static function sanInput($input, $sanHTML = false) {
 			$sanitized = stripslashes($input);
-			$sanitized = htmlspecialchars($sanitized);
+
+			if($sanHTML)
+				$sanitized = htmlspecialchars($sanitized);
+
 			$sanitized = trim($sanitized);
 
 			return $sanitized;
@@ -31,6 +34,99 @@ namespace MFunc
 			return str_replace("-", " ", $param);
 		}
 
+		/**
+		 * Parse fields option from query string
+		 * It splits fields names by comma "," separator, then return array of those names
+		 * Fields are chosen columns names of a model to return to user
+		 *
+		 * @param string $fields Fields names separated by comma
+		 * @return array Array of fields names
+		 * */
+		public static function parseFieldsOption(string $fields)
+		{
+			$fields = preg_replace("/\s+/", "", $fields);
+
+			return explode(",", $fields);
+		}
+
+		/**
+		 * Parse filters provided by query string to a form understood by `AbstractModel` methods
+		 * The form is conform to sql filter commands after `WHERE` statement
+		 *
+		 * @param array $filters Filters options from query strings
+		 * @param array $columns Columns of the model to check integrity of filters
+		 *  */
+		public static function parseFiltersOption(array $filters = [], array $columns = []) : array
+		{
+			$options = [];
+			$key_operator = [
+				"lt"  => "<",
+				"gt"  => ">",
+				"leq" => "<=",
+				"geq" => ">=",
+				"eq"  => "="
+			];
+
+			foreach($filters as $col => $operators)
+			{
+				$colNotValid = !array_key_exists($col, $columns) ||
+					!is_array($operators);
+
+				if($colNotValid)
+					continue;
+
+				foreach($operators as $operator => $value)
+				{
+					if($operator == "like") // The case for like operator (usually for searching)
+						array_push($options, "$col LIKE \"%$value%\"");
+					else if($operator == "in")
+					{
+						$value =  preg_replace("/([\w-]+)/", '"$1"', $value); // Quote values => "value"
+						$values = self::parseFieldsOption($value);
+
+						self::trimArr($values); // Trim from empty strings
+
+						$values = implode(",", $values);
+
+						array_push($options, "$col IN ($values)");
+					}
+					else if(array_key_exists($operator, $key_operator))
+						array_push($options, "$col {$key_operator[$operator]} \"$value\"");
+				}
+			}
+
+			return $options;
+		}
+
+		/**
+		 * Parse value of `order_by` option in query string, then returns sql condition command
+		 * For example, `order_by=+start_date` will return `"ORDER BY start_date DESC"` by passing the value
+		 * of `order_by` to the function. Take care that empty string is returned if `start_date` is not in
+		 * `$columns` array
+		 *
+		 * @param string $orderVal Value of `order_by` key in the query string
+		 * @param array $columns Columns of the model to check integrity of filters
+		 * @return string Valid sql `ORDER BY` condition
+		 *  */
+		public static function parseOrderOption(string $orderVal, array $columns) : string
+		{
+			$result   = "";
+			$operator = "";
+
+
+			if($orderVal[0] == "+" || $orderVal[0] == "-")
+			{
+				$operator = $orderVal[0];
+				$orderVal = substr($orderVal, 1);
+			}
+
+			$order = $operator == "+" ? "DESC" : "ASC";
+
+			if(array_key_exists($orderVal, $columns))
+				$result = "ORDER BY $orderVal $order";
+
+			return $result;
+		}
 
 		// Print Array
 		public static function printArr(&$arr)
@@ -38,6 +134,30 @@ namespace MFunc
 			echo "<pre>";
 			print_r($arr);
 			echo "</pre>";
+		}
+
+		/**
+		 * Trim array from first and last elements that contains empty strings
+		 *
+		 * ## Note
+		 * This function changes the array given, and return nothing
+		 *
+		 * @param array &$arr Array to trim
+		 * */
+		public static function trimArr(array &$arr)
+		{
+			if($arr[0] == "") array_shift($arr);
+
+			// Trim last if it is empty or contains query string
+			$lastIndex     = count($arr) - 1;
+			$lastNeedsTrim = $arr[$lastIndex] == "";
+
+			if($lastNeedsTrim) array_pop($arr);
+
+			// Strip query string
+			$lastIndex       = count($arr) - 1;
+			if($lastIndex >= 0)
+				$arr[$lastIndex] = preg_replace("/\?.*/", "", $arr[$lastIndex]);
 		}
 
 

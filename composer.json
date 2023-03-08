@@ -1,0 +1,5 @@
+{
+    "require": {
+        "starkbank/ecdsa": "^2.0"
+    }
+}

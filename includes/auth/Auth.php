@@ -12,6 +12,7 @@ class Auth
 {
 	private static $AUTH_TOKEN_HEADER = "X-MFunc-Token";
 	private static $AUTH_REGISTERED_METHODS_ON_AUTHENTICATE = [];
+	public static $token;
 
 	/**
 	 *	Set header name that holds the authentication token
@@ -90,6 +91,8 @@ class Auth
 			if(!is_null($callback))
 				$callback($jwt);
 		}
+
+		self::$token = $jwt;
 	}
 }
 

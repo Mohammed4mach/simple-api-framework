@@ -3,19 +3,15 @@
 namespace ClinicModels;
 
 require_once PROJ_ROOT . "/includes/HTTP/HTTPException.php";
-require_once PROJ_ROOT . "/includes/HTTP/HTTPResponse.php";
 
 use \Exception;
 use MFunc\HTTPException;
-use MFunc\HTTPResponse;
 
 abstract class AbstractModel
 {
 	public $id;
 	protected $database;
 	public static array $columns;
-	public static array $specialColumns;
-	public static array $selfInitColumns;
 
 	const TableName = "abstract";
 
@@ -61,7 +57,7 @@ abstract class AbstractModel
 	 * */
 	public static function columnSpecial(string $column) : bool
 	{
-		return array_key_exists($column, static::$specialColumns);
+		return static::$columns[$column]["special"];
 	}
 
 	/**
@@ -74,7 +70,7 @@ abstract class AbstractModel
 	 * */
 	public static function columnSelfInit(string $column) : bool
 	{
-		return array_key_exists($column, static::$selfInitColumns);
+		return static::$columns[$column]["selfInit"];
 	}
 
 	/**
@@ -93,13 +89,13 @@ abstract class AbstractModel
 		$params  = [];
 		$changes = "";
 
-		foreach(static::$columns as $col => $fullColName)
+		foreach(static::$columns as $col => $colInfo)
 		{
 			$columnSelfInit  = self::columnSelfInit($col);
 			if($columnSelfInit)
 				continue;
 
-			$changes        .= "$fullColName = :$col, ";
+			$changes        .= "{$colInfo["name"]} = :$col, ";
 
 			$params[$col]    = $this->{$col};
 		}
@@ -132,13 +128,56 @@ abstract class AbstractModel
 				if(!self::columnExists($field))
 					continue;
 
-				$columns .= static::$columns[$field] . ", ";
+				$columns .= static::$columns[$field]["name"] . ", ";
 			}
 
 			// Remove trailing comma, or reset $columns if it is empty string
 			$columns = $columns === "" ?
 				"*" :
 				trim($columns, ", ");
+		}
+	}
+
+	/**
+	 * Indicates wether `$str` can cause damage to database
+	 *
+	 * @param string $str String to test against
+	 * @author Mohammed Abdulsalam
+	 *  */
+	public static function strDanger(string $str)
+	{
+		$danger = preg_match("/^update$|^delete$|^drop$|^create$|^truncate$|^alter$|^grant$|^1=1$/i", $str);
+
+		return boolval($danger);
+	}
+
+	/**
+	 * Prepare `$sqlOptions` based on `$options` provided
+	 *
+	 * @param array $options Array of strings. Those strings can be any filtering or sorting sql command
+	 * @param mixed &$sqlOptions String to store sql conformed options
+	 * @author Mohammed Abdulsalam
+	 * */
+	public static function initSqlOptions(array $options, mixed &$sqlOptions)
+	{
+		$sqlOptions = "";
+		$optionsCount = count($options);
+
+		if($optionsCount != 0)
+		{
+			$sqlOptions = "WHERE";
+
+			for($i = 0; $i < $optionsCount; $i++)
+			{
+				$sqlOptions .= " {$options[$i]} ";
+
+				if(self::strDanger($options[$i]))
+					throw new HTTPException("Fortified you bitch", HTTPException::Forbidden);
+
+				$lastIndex = $optionsCount - 1;
+				if($i != $lastIndex)
+					$sqlOptions .= "AND";
+			}
 		}
 	}
 
@@ -164,12 +203,15 @@ abstract class AbstractModel
 			if(is_null($val))
 				throw new HTTPException("Values cannot be nulls", HTTPException::BadRequest);
 
-			$columnSpecial   = self::columnSpecial($col);
 			$columnNotExists = !self::columnExists($col);
-			if($columnSpecial || $columnNotExists)
+			if($columnNotExists)
 				continue;
 
-			$changes      .= static::$columns[$col] . " = " . ":$col, ";
+			$columnSpecial   = self::columnSpecial($col);
+			if($columnSpecial)
+				continue;
+
+			$changes      .= static::$columns[$col]["name"] . " = " . ":$col, ";
 
 			$params[$col]  = $val;
 		}
@@ -234,7 +276,6 @@ abstract class AbstractModel
 		}
 		catch(Exception $ex)
 		{
-			echo $ex;
 			throw new HTTPException("Failed to fetch", HTTPException::InternalError);
 		}
 	}
@@ -245,15 +286,16 @@ abstract class AbstractModel
 	 * @param array $fields Fields to fetch only. If equals null, all fields will be fetched
 	 * @param string $limit Max limit of number of rows
 	 * @param string $offset Offset to begin fetching. Usually used in pagination
-	 * @param string $sqlOptions Conditions to filter & sort the result
+	 * @param array $sqlOptions Conditions to filter & sort the result
 	 * @return array | null The fetched rows
 	 * @author Mohammed Abdulsalam
 	 * */
 	public function fetchAll(
-		array $fields      = null,
-		string $limit      = null,
-		string $offset     = null,
-		string $sqlOptions = ""
+		array $fields  = null,
+		string $limit  = null,
+		string $offset = null,
+		string $order  = null,
+		array $options = []
 	) : array | null
 	{
 		self::initFetchColumns($fields, $columns);
@@ -265,19 +307,25 @@ abstract class AbstractModel
 			"" :
 			"LIMIT $limit";
 
-		$sql = "SELECT $columns FROM " . static::TableName . " WHERE true $sqlOptions $limit $offset";
+		if(self::strDanger($offset) || self::strDanger($limit))
+			throw new HTTPException("Fortified you bitch", HTTPException::Forbidden);
+
+
+		self::initSqlOptions($options, $sqlOptions);
+
+		$sql = "SELECT $columns FROM " . static::TableName . " $sqlOptions $order $limit $offset";
 
 		try
 		{
 			$result = $this->database->executeSQL($sql);
 
 			// Fetch total count;
-			$sql    = "SELECT COUNT(*) as total FROM " . static::TableName . " WHERE true $sqlOptions";
+			$sql    = "SELECT COUNT(*) as total FROM " . static::TableName . " $sqlOptions";
 			$count  = $this->database->executeSQL($sql);
 
 			return [
 				"data"  => $result,
-				"total count" => $count[0]->total
+				"total" => $count[0]->total
 			];
 		}
 		catch(Exception $ex)
@@ -340,8 +388,6 @@ abstract class AbstractModel
 		try
 		{
 			$this->database->executeSQL($sql, $params);
-
-			$this->validateLastOperation();
 		}
 		catch(HTTPException $ex)
 		{
