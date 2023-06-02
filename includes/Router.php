@@ -192,6 +192,11 @@ class Router
 		if(!array_key_exists("__PATH__", $target))
 			self::respond_not_found();
 
+		// Set Globals
+		global $_Request_Params;
+		global $_Request_Query_String;
+		global $_Request_Body;
+		global $_Request_Headers;
 		// Set data variables for controllers
 		$_Request_Params   = null;
 		$_Request_Query_String = null;

@@ -13,6 +13,9 @@ namespace MFunc
 	global $Configurations;
 	$Configurations = json_decode(file_get_contents($conf_path));
 
+	// Define Host
+	define("PROJ_HOST", $Configurations->host);
+
 	if(!$Configurations)
 		throw new Exception("Issue in reading configurations !");
 

@@ -6,6 +6,7 @@ require_once __DIR__ . "/../../config/Configurations.php";
 require_once PROJ_ROOT . "/includes/HTTP/HTTPResponse.php";
 require_once PROJ_ROOT . "/includes/JWT/JWT.php";
 require_once PROJ_ROOT . "/includes/JWT/JWTException.php";
+require_once PROJ_ROOT . "/includes/functionality.php";
 
 
 class Auth
@@ -52,7 +53,7 @@ class Auth
 	/**
 	 *	Authenticate the user through JWT in request headers
 	 *	This method send response code 401 (Unauthorized) in case of
-	 *	invalid or expired token
+	 *	invalid
 	 *
 	 *	@author Mohammed Abdulsalam
 	 * */
@@ -61,9 +62,15 @@ class Auth
 		global $Configurations;
 
 		$headers = apache_request_headers();
+        if(is_array($headers))
+        {
+            $tokenHeaderIsSet = array_key_exists(self::$AUTH_TOKEN_HEADER, $headers);
 
-		if(!$headers || !array_key_exists(self::$AUTH_TOKEN_HEADER, $headers))
-			HTTPResponse::clientUnauthorized("The token is not set properly");
+            if(!$tokenHeaderIsSet)
+                HTTPResponse::clientUnauthorized("The token is not set properly");
+        }
+        else
+            HTTPResponse::serverInternalError("Error occurred, try again, or contact maintainers");
 
 		$token = $headers[self::$AUTH_TOKEN_HEADER];
 

@@ -9,7 +9,7 @@ class HTTPResponse
 	{
 		$body = !is_null($message)
 			? "{ \"message\": \"$message\" }"
-			: "";
+			: null;
 
 		http_response_code($statusCode);
 		echo $body;

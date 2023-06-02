@@ -44,6 +44,7 @@ namespace MFunc
 					echo "</div>";
 				}
 
+                http_response_code(500);
 				throw new Exception("Error in creating database object");
 			}
 		}
@@ -113,6 +114,21 @@ namespace MFunc
 		public function getLastRowCount() : int | null
 		{
 			return $this->lastRowCount;
+		}
+
+		/**
+		 * Generate UUID
+		 * This Method fetch UUID from DBMS with `SELECT` statement
+		 *
+		 * @return string UUID
+		 * */
+		public function genUUID() : string
+		{
+			$sql = "SELECT UUID() as uuid";
+
+			$UUID = $this->executeSQL($sql)[0]->uuid;
+
+			return $UUID;
 		}
 	}
 }

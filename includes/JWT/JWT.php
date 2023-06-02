@@ -91,7 +91,7 @@ namespace MFunc
 
 			$valid = openssl_verify($data, $this->signature, $publicKey, "sha256WithRSAEncryption");
 
-			if(!($valid == 1 || $valid == 0))
+			if(!($valid === 1 || $valid === 0))
 				throw new JWTException("Unsupported key format. Openssl error:" . openssl_error_string(), JWTException::UNSUPPORTED_KEY);
 
 			return boolval($valid);

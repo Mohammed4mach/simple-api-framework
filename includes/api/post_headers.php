@@ -12,3 +12,6 @@ if(!$__ALLOWED_HTTP_REQUEST_METHODS[$_SERVER["REQUEST_METHOD"]])
 	exit();
 }
 
+if($_SERVER["REQUEST_METHOD"] == "OPTIONS")
+	exit;
+

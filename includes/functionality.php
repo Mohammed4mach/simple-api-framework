@@ -7,8 +7,20 @@ namespace MFunc
 	class Func
 	{
 		// Encapsulate input sanitize functions in one
-		public static function sanInput($input, $sanHTML = false) {
+		public static function sanInput($input, $sanHTML = false, $escapeQuotes = false) {
+			$noNeed = !is_string($input);
+			if($noNeed)
+				return $input;
+
 			$sanitized = stripslashes($input);
+            if($escapeQuotes)
+            {
+                $sanitized = str_replace(
+                    ['"', "'"],
+                    ['\"', "\'"],
+                    $sanitized
+                ); // Replace quotes
+            }
 
 			if($sanHTML)
 				$sanitized = htmlspecialchars($sanitized);
@@ -42,7 +54,7 @@ namespace MFunc
 		 * @param string $fields Fields names separated by comma
 		 * @return array Array of fields names
 		 * */
-		public static function parseFieldsOption(string $fields)
+		public static function parseFieldsOption(string $fields) : array
 		{
 			$fields = preg_replace("/\s+/", "", $fields);
 
@@ -64,7 +76,8 @@ namespace MFunc
 				"gt"  => ">",
 				"leq" => "<=",
 				"geq" => ">=",
-				"eq"  => "="
+				"eq"  => "=",
+				"neq" => "!="
 			];
 
 			foreach($filters as $col => $operators)
@@ -75,8 +88,16 @@ namespace MFunc
 				if($colNotValid)
 					continue;
 
+                // Change $col to formal name
+                $col = $columns[$col]["name"];
+
 				foreach($operators as $operator => $value)
 				{
+                    $value = self::sanInput($value, false, true);
+
+                    if($value === null || $value === "")
+                        continue;
+
 					if($operator == "like") // The case for like operator (usually for searching)
 						array_push($options, "$col LIKE \"%$value%\"");
 					else if($operator == "in")
@@ -120,8 +141,11 @@ namespace MFunc
 				$orderVal = substr($orderVal, 1);
 			}
 
-			$order = $operator == "+" ? "DESC" : "ASC";
+			$order = $operator == "-" ? "ASC" : "DESC";
 
+            $orderVal = trim($orderVal, " ");
+            $tmp = " ";
+            $tmp = bin2hex($tmp);
 			if(array_key_exists($orderVal, $columns))
 				$result = "ORDER BY $orderVal $order";
 
@@ -205,10 +229,13 @@ namespace MFunc
 			return $result;
 		}
 
-		// Upload image to destination
-		// @param $formName — name of the file in the form
-		// @param $new_img_name — new image name
-		// @param $folder — desired folder to upload in the 'upload' folder
+		/**
+		 * Upload image to destination
+		 *
+		 * @param $formName — name of the file in the form
+		 * @param $new_img_name — new image name
+		 * @param $folder — desired folder to upload
+		 * */
 		public static function uploadFile($formName, $new_img_name, $folder)
 		{
 			if(isset($_FILES[$formName]['name']))
@@ -217,10 +244,10 @@ namespace MFunc
 				$tmp_name = $_FILES[$formName]['tmp_name'];
 				$size = $_FILES[$formName]['size'];
 				$error = $_FILES[$formName]['error'];
-				
+
 				$name_arr = explode('.', $img_name);
 				$img_extension = strtolower(end($name_arr));
-				$allowed_extensions = array('jpg', 'jpeg', 'png', 'jfif', 'svg', 'webp', 'mp4');
+				$allowed_extensions = array('jpg', 'jpeg', 'png', 'jfif', 'svg', 'webp', 'mp4', 'pdf', 'txt');
 
 
 				// Error handling
@@ -233,13 +260,13 @@ namespace MFunc
 
 				// Rename the image and move to uploads
 				$new_img_name = $new_img_name . '.' . $img_extension;
-				$img_destination = "../uploads/$folder/$new_img_name";
+				$img_destination = "$folder/$new_img_name";
 				$uploaded = move_uploaded_file($tmp_name, $img_destination);
 
 				if(!$uploaded)
 					return array(0, "upload_failed");
 
-				return array(1, $new_img_name);
+				return array(1, $img_destination);
 			}
 			return "noway";
 		}
@@ -316,6 +343,26 @@ namespace MFunc
 
 			return preg_replace($pattern, $replace, $text);
 		}
+
+        /**
+         * Get MAC address of the server
+         *
+         * @return string MAC address of one of server's interfaces
+         * */
+        public static function getMacAddress()
+        {
+            $cmd_out = `ip link | grep ether`;
+
+            preg_match(
+                "/[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}/",
+                $cmd_out,
+                $res
+            );
+
+            $mac = $res[0];
+
+            return $mac;
+        }
 	}
 }
 
